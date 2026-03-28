@@ -1,63 +1,76 @@
 #!/usr/bin/env python3
-"""red_black_tree2 - Red-black tree with insert and search."""
-import sys
-RED,BLACK=True,False
-class Node:
-    def __init__(s,key,color=RED):s.key=key;s.color=color;s.left=s.right=s.parent=None
+"""Red-Black Tree — zero-dep."""
+BLACK=0; RED=1
+
+class RBNode:
+    def __init__(self, key, color=RED):
+        self.key=key; self.color=color; self.left=self.right=self.parent=None
+
 class RBTree:
-    def __init__(s):s.NIL=Node(0,BLACK);s.root=s.NIL
-    def insert(s,key):
-        n=Node(key);n.left=n.right=s.NIL;p=None;c=s.root
-        while c!=s.NIL:
-            p=c;c=c.left if key<c.key else c.right
-        n.parent=p
-        if not p:s.root=n
-        elif key<p.key:p.left=n
-        else:p.right=n
-        s._fix_insert(n)
-    def _fix_insert(s,z):
+    def __init__(self):
+        self.NIL=RBNode(None,BLACK); self.root=self.NIL
+    def insert(self, key):
+        z=RBNode(key); z.left=z.right=self.NIL; y=None; x=self.root
+        while x!=self.NIL:
+            y=x; x=x.left if key<x.key else x.right
+        z.parent=y
+        if y is None: self.root=z
+        elif key<y.key: y.left=z
+        else: y.right=z
+        self._fix_insert(z)
+    def _fix_insert(self, z):
         while z.parent and z.parent.color==RED:
             if z.parent==z.parent.parent.left:
-                y=z.parent.parent.right
-                if y.color==RED:z.parent.color=BLACK;y.color=BLACK;z.parent.parent.color=RED;z=z.parent.parent
+                u=z.parent.parent.right
+                if u.color==RED:
+                    z.parent.color=BLACK; u.color=BLACK; z.parent.parent.color=RED; z=z.parent.parent
                 else:
-                    if z==z.parent.right:z=z.parent;s._left_rotate(z)
-                    z.parent.color=BLACK;z.parent.parent.color=RED;s._right_rotate(z.parent.parent)
+                    if z==z.parent.right: z=z.parent; self._left_rotate(z)
+                    z.parent.color=BLACK; z.parent.parent.color=RED; self._right_rotate(z.parent.parent)
             else:
-                y=z.parent.parent.left
-                if y.color==RED:z.parent.color=BLACK;y.color=BLACK;z.parent.parent.color=RED;z=z.parent.parent
+                u=z.parent.parent.left
+                if u.color==RED:
+                    z.parent.color=BLACK; u.color=BLACK; z.parent.parent.color=RED; z=z.parent.parent
                 else:
-                    if z==z.parent.left:z=z.parent;s._right_rotate(z)
-                    z.parent.color=BLACK;z.parent.parent.color=RED;s._left_rotate(z.parent.parent)
-        s.root.color=BLACK
-    def _left_rotate(s,x):
-        y=x.right;x.right=y.left
-        if y.left!=s.NIL:y.left.parent=x
+                    if z==z.parent.left: z=z.parent; self._right_rotate(z)
+                    z.parent.color=BLACK; z.parent.parent.color=RED; self._left_rotate(z.parent.parent)
+        self.root.color=BLACK
+    def _left_rotate(self, x):
+        y=x.right; x.right=y.left
+        if y.left!=self.NIL: y.left.parent=x
         y.parent=x.parent
-        if not x.parent:s.root=y
-        elif x==x.parent.left:x.parent.left=y
-        else:x.parent.right=y
-        y.left=x;x.parent=y
-    def _right_rotate(s,y):
-        x=y.left;y.left=x.right
-        if x.right!=s.NIL:x.right.parent=y
+        if x.parent is None: self.root=y
+        elif x==x.parent.left: x.parent.left=y
+        else: x.parent.right=y
+        y.left=x; x.parent=y
+    def _right_rotate(self, y):
+        x=y.left; y.left=x.right
+        if x.right!=self.NIL: x.right.parent=y
         x.parent=y.parent
-        if not y.parent:s.root=x
-        elif y==y.parent.right:y.parent.right=x
-        else:y.parent.left=x
-        x.right=y;y.parent=x
-    def search(s,key):
-        n=s.root
-        while n!=s.NIL:
-            if key==n.key:return True
+        if y.parent is None: self.root=x
+        elif y==y.parent.right: y.parent.right=x
+        else: y.parent.left=x
+        x.right=y; y.parent=x
+    def inorder(self):
+        result=[]
+        def _in(n):
+            if n!=self.NIL: _in(n.left); result.append((n.key,"R" if n.color==RED else "B")); _in(n.right)
+        _in(self.root); return result
+    def search(self, key):
+        n=self.root
+        while n!=self.NIL:
+            if key==n.key: return True
             n=n.left if key<n.key else n.right
         return False
-    def inorder(s,n=None):
-        if n is None:n=s.root
-        if n==s.NIL:return[]
-        return s.inorder(n.left)+[n.key]+s.inorder(n.right)
+    def height(self):
+        def _h(n): return 0 if n==self.NIL else 1+max(_h(n.left),_h(n.right))
+        return _h(self.root)
+
 if __name__=="__main__":
-    t=RBTree();data=[7,3,18,10,22,8,11,26,2,6,13]
-    for d in data:t.insert(d)
-    print(f"Inserted: {data}");print(f"Inorder: {t.inorder()}")
-    for k in[10,15,22]:print(f"Search {k}: {'found' if t.search(k) else 'not found'}")
+    t=RBTree()
+    for k in [7,3,18,10,22,8,11,26,2,6,13]:
+        t.insert(k)
+    print(f"Inorder: {t.inorder()}")
+    print(f"Root: {t.root.key} ({'R' if t.root.color==RED else 'B'})")
+    print(f"Height: {t.height()}")
+    print(f"Search 10: {t.search(10)}, Search 99: {t.search(99)}")
